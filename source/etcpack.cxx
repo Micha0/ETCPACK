@@ -455,8 +455,8 @@ bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expande
 {
 	int w1,h1;
 	int wdiv4, hdiv4;
-	char str[255];
-
+	const char copyCommandTemplate[] = "copy %s tmp.ppm\n";
+	char* str = new char[strlen(filename) + strlen(copyCommandTemplate) + 1];
 
 	// Delete temp file if it exists.
 	if(fileExist("tmp.ppm"))
@@ -469,7 +469,7 @@ bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expande
 	if(!strcmp(&filename[q],".ppm")) 
 	{
 		// Already a .ppm file. Just copy. 
-		sprintf(str,"copy %s tmp.ppm \n", filename);
+		sprintf(str, copyCommandTemplate, filename);
 		printf("Copying source file to tmp.ppm\n", filename);
 	}
 	else
@@ -536,13 +536,19 @@ bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expande
 		}
 		if(!(expandedwidth == width && expandedheight == height))
 		   printf("Active pixels: %dx%d. Expanded image: %dx%d\n",width,height,expandedwidth,expandedheight);
+
+		delete [] str;
 		return true;
 	}
 	else
 	{
 		printf("Could not read tmp.ppm file\n");
+
+		delete [] str;
 		exit(1);	
 	}
+
+	delete [] str;
 	return false;
 
 }
@@ -15882,7 +15888,7 @@ void compressFile(char *srcfile,char *dstfile)
 	uint8 *srcimg;
 	int width,height;
 	int extendedwidth, extendedheight;
-	struct _timeb tstruct;
+	timeb tstruct;
 	int tstart;
 	int tstop;
 	// 0: compress from .any to .pkm with SPEED_FAST, METRIC_NONPERCEPTUAL, ETC 
@@ -15960,11 +15966,11 @@ void compressFile(char *srcfile,char *dstfile)
 			printf("Compressing...\n");
 
 			tstart=time(NULL);
-			_ftime( &tstruct );
+			ftime( &tstruct );
 			tstart=tstart*1000+tstruct.millitm;
 			compressImageFile(srcimg,alphaimg,width,height,dstfile,extendedwidth, extendedheight);			
 			tstop = time(NULL);
-			_ftime( &tstruct );
+			ftime( &tstruct );
 			tstop = tstop*1000+tstruct.millitm;
 			printf( "It took %u milliseconds to compress:\n", tstop - tstart);
 			calculatePSNRfile(dstfile,srcimg,alphaimg);
